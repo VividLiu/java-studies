@@ -39,6 +39,14 @@
         - [Package and Overview Comments](#package-and-overview-comments)
         - [Comment Extraction](#comment-extraction)
     - [Class Design Hints](#class-design-hints)
+  - [Inheritance](#inheritance)
+    - [Classes, Superclasses and Subclasses](#classes-superclasses-and-subclasses)
+      - [super in constructor](#super-in-constructor)
+      - [Inheritance Hierarchies](#inheritance-hierarchies)
+      - [Polymorphism](#polymorphism)
+      - [dynamic binding](#dynamic-binding)
+      - [Preventing Inheritance: Final Classes and Methods](#preventing-inheritance-final-classes-and-methods)
+      - [Casting](#casting)
 
 # Core Java Fundamentals
 
@@ -708,7 +716,6 @@ Fine tuning javadoc:
 - -linksource each source file is converted to HTML without color coding but with line numbers.
 - doclets can be used to output specific formats
 
-
 ### Class Design Hints
 
 Hints for well-mannered OOP
@@ -719,9 +726,217 @@ Hints for well-mannered OOP
 1. Not all fields need individual field accessors and mutators. Only supply them if they require to be changed.
 1. Break up classes with too many responsibilities
 1. make names of your classes and methods reflect their responsibilities
+
 - class name should be nown or a nount precdeded by an adjective or a gerund (an "-ing")
-    - Order
-    - RushOrder
-    - BillingAddress
+  - Order
+  - RushOrder
+  - BillingAddress
 - getter method should start with "get"
 - setter method should start with "set"
+
+## Inheritance
+
+### Classes, Superclasses and Subclasses
+
+extends keyword making derived class from existing class
+
+- existing class is called superclass, base class or parent class
+- new class is called subclass, derived class or child class
+
+Term for superclass and subclass is confusing. Superclass has less functionality than subclass.
+
+- super and sup come from language of sets. The superclass is a superset of the child class. The child class is a subset of the parent.
+
+example:
+
+```java
+class Manager extends Employee
+{
+    private double bonus;
+    public void setBonus(double b)
+    {
+        bonus = b;
+    }
+}
+```
+
+Only need to indicate differences between subclass and superclass. 
+
+- subclass has not direct access to private fields of the superclass
+- to access the private fields need to use accessor
+
+If a method is overriden in the subclass you can access the parent class implementation by using the super keyword:
+
+
+```java
+class Manager extends Employee
+{
+    private double bonus;
+    public void setBonus(double b)
+    {
+        bonus = b;
+    }
+    public double getSalary()
+    {
+        double baseSalary = super.getSalary();
+        return baseSalary + bonus;
+    }
+}
+```
+
+NOTE: super and this are not exactly analogous. Super is not a reference to an object. you can not assign the value super to another object value. Super is a special keyword.
+
+Inheritance can add fields, add methods, or override methods. They can never take away methods or fields.
+
+
+#### super in constructor
+
+When used inside the constructor the super keyword directs the constructor to call the parent's constructor.
+
+- it must be the first line in the constructor
+- if subclass does not class super constructor explicitly then the no argument constructor for the superclass constructor is called.
+  - if superclass does not have a no argument constructor the java compiler will report an error
+
+- super has two meanings:
+  1. invoke a superclass method
+  1. invoke a superclass constructor
+
+subclass must initialize private fields of superclass through a constructor. subclass has no direct access to the private fields of its superclass.
+
+#### Inheritance Hierarchies
+
+**inheritance hierarchy** the collection of classes extending a common superclass is called an inheritance hierarchy
+
+**inheritance chain** a path from a particular class to its ancestors in the inheritance hierarchy
+
+Java does not support multiple inheritance. A class can only have a single parent.
+
+#### Polymorphism
+
+In java variables are polymorhic. A variable of type C can refer to an object of class C or an object of any subclass of C.
+
+**polymorphism** when an object variable refers to multiple actual types.
+
+You can assign a subclass object to a superclass reference
+
+- when you call a subclass specific method from the superclass reference the compiler will error
+
+```java
+Manager boss = new Manager(...);
+Employee[] staff = new Employee[3];
+staff[0] = boss;
+
+boss.setBonus(5000); // ok
+staff[0].setBonus(5000); // Error
+
+// can not assign a superclass reference to a subclass variable
+Manager m = staff[i]; // Error
+```
+In Java all arrays remember the element type which they are created.
+
+- the array types monitor that only compatible references are stored in the array
+- attempting to store an incompatible type in the array reference results in an **ArrayStoreException** error
+
+```java
+Manager[] managers = new Manager[10];
+
+Employee[] staff = managers; // OK
+
+staff[0] = new Employee("Harry Hacker", ...); // compiler is OK; will result in ArrayStoreException at runtime
+```
+
+#### dynamic binding
+
+**dynamic binding** process by which appropriate method is selected at runtime.
+
+What happens when x.f(param) method is called on an object:
+
+1. compiler looks at the declared type of x (implicit parameter) and the method name. Assuming x resolves to object of type class C
+  - all methods in class C that are named f are enumerated
+    - this includes all non-private superclass methods of class C
+
+1. complier determines the type of parameters supplied to the method call. It finds a unique matched signature **overloading resolution**. If multiple matches are found the compiler throws an error. 
+
+- The return type is not part of the signature. The return type can be be overriden by the subclass. However the return type must be a subtype of the original return type.
+
+```java
+public Employee getBuddy() (...)
+public Manager getBuddy() (...) // ok to change return type
+```
+
+1. If a method is private, static, final, or a constructor the compiler knows what method to call through **static binding**. Otherwise the method needs to be resolved via dynamic binding (because method to be called depends on actual type of implicit parameter).
+
+1. Virtual machine needs to call the version of method that is appropriate for the actual type of object that x belongs. The virtual machine uses a **method table** to resolve the method call for efficiency.
+
+**dynamic binding** makes programs extensible without need to modify existing code.
+
+When overriding method the subclass method must be at least as visible as the superclass method. If superclass is public the subclss must be public as well.
+
+#### Preventing Inheritance: Final Classes and Methods
+
+if a class has **final** modifier it can not be extended. By default all of its methods are also final and can not be overridden. its fields are not **final** automatically
+
+```java
+final class Executive extends Manager {
+    ...
+}
+```
+
+if a method has a **final** it can not be overridden.
+
+```java
+final class Employee {
+    public final String getName() 
+    {
+        return name;
+    }
+}
+```
+
+if a field is declared as **final** its value can not be declared after the object is constructed.
+
+The only reason to use **final** is to ensure that the sematics of calling the class or method does not change:
+
+- getTime and setTime for Calendar class are final. Calendar class has the responsibility of converting Date class and calendar state
+
+- String class is final. No other class can subclass the String.
+
+#### Casting
+
+**casting** is the process of forcing a conversion from one type to another.
+
+Surround target class name with parentehsis:
+
+```java
+Manager boss = (Manager) staff[0];
+```
+
+Only reason to use a cast is if you want to use an object to its full capacity after the type has been temporarily forgotton.
+
+Casting down an inheritance chain will cause error during Runtime:
+
+```java
+// staff[1] contains Employee superclass of Manager
+Manager boss = (Manager) staff[1]; // ClassCastException
+```
+
+Compiler will not let you make a cast if there is no chance for cast to succeed:
+
+```java
+Date c = (Date) staff[1]; // Date is not subclass of Employee
+```
+
+- you can only cast within inheritance hierarchy
+- instance of can be used to check before casting takes place
+
+```java
+if (staff[1] instance Manager)
+{
+    boss = (Manager) staff[1];
+}
+```
+
+```java
+// the test does not generate an exception if x is null. It simply returns false. null refers to no object so it does not refer to object of type C
+x instance of C
+```
