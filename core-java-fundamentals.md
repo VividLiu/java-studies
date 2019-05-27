@@ -47,6 +47,18 @@
       - [dynamic binding](#dynamic-binding)
       - [Preventing Inheritance: Final Classes and Methods](#preventing-inheritance-final-classes-and-methods)
       - [Casting](#casting)
+      - [Abstract Classes](#abstract-classes)
+      - [Protected Access](#protected-access)
+    - [Object: The Cosmic Superclass](#object-the-cosmic-superclass)
+      - [equals Method](#equals-method)
+        - [Equality Testing and Inheritance](#equality-testing-and-inheritance)
+        - [Perfect equals method](#perfect-equals-method)
+        - [Tips and Caution](#tips-and-caution)
+      - [The hashCode Method](#the-hashcode-method)
+      - [The toString Method](#the-tostring-method)
+    - [Generic Array List](#generic-array-list)
+      - [Accessing Array List Elements](#accessing-array-list-elements)
+      - [Compatibility between Typed and Raw Array Lists](#compatibility-between-typed-and-raw-array-lists)
 
 # Core Java Fundamentals
 
@@ -930,7 +942,7 @@ Date c = (Date) staff[1]; // Date is not subclass of Employee
 - instance of can be used to check before casting takes place
 
 ```java
-if (staff[1] instance Manager)
+if (staff[1] instanceof Manager)
 {
     boss = (Manager) staff[1];
 }
@@ -938,5 +950,422 @@ if (staff[1] instance Manager)
 
 ```java
 // the test does not generate an exception if x is null. It simply returns false. null refers to no object so it does not refer to object of type C
-x instance of C
+x instanceof C
+```
+
+#### Abstract Classes
+
+- A class with one or more abstract methods must be declared with the abstract keyword.
+
+- An abstract class can have fields and concrete methods.
+
+- An abstract class can not be instantiated.
+
+- An abstract class can also have no abstract methods.
+
+- Abstract methods are placeholders for methods that are implemented in subclasses.
+
+When inheriting from an abstract class you have two choices:
+
+1. leave some or all abstract methods in the parent class undefined in the subclass. This subclass must be declared as an abstract as well.
+
+2. subclass declares all the abstract methods in the parent class. This class can be a non-abstract class and instantiated.
+
+Abstract classes can be used as types for variable assignment. These assignments allow a variety of types to be referenced by a single variable:
+
+```java
+Person[] people = new Person[2];
+people[0] = new Employee(. . .);
+people[1] = new Student(. . .);
+
+for (Person p : people)
+    // Error if getDescription was not defined in the Person class but existed in the Employee and Student class as concrete methods
+    // compiler ensures that only methods on the declared type are invocable
+    System.out.println(p.getName() + ", " + p.getDescription());
+
+```
+
+#### Protected Access
+
+Variables, methods, and constructors, which are declared protected in a superclass can be accessed only by the subclasses in other package or any class within the package of the protected members' class.
+
+- You can't access a protected superclass field in a different instance of the class.
+
+Summary of four access modifiers:
+
+1. private: visible to the class only
+2. public: visible to the world
+3. protected: visible to the package and all subclasses
+4. default: visible to the package. The unfortunate default.
+
+Modifier | Class | Package | Subclass | World
+---------|----------|---------|--------|---------
+ public  | Y | Y | Y | Y
+ protected | Y | Y | Y | N
+ no modifier | Y | Y | N | N
+ private | Y | N | N | N
+
+```java
+public class A {
+    protected int data = 10;
+}
+
+public class B {
+    A obj = new A();
+
+    public int getData{
+        // can be accessed because in same package
+        return obj.data;
+    }
+}
+```
+
+
+```java
+// The 'C' class cannot access data variable of A's object since it is beyond the scope; not in same package.
+
+public class C {
+    A obj = new A();
+
+    public int getData{
+        return obj.data; //compile time error
+    }
+}
+```
+
+### Object: The Cosmic Superclass
+
+The Object class implicitly extends every class in Java.
+
+- Array types are always class types that extend the Object class
+
+#### equals Method
+
+Equals method checks whether two objects are equal. 
+
+- The object method default equal method checks whether two object references are identical.
+
+```java
+ // returns true if both arguments are null, or false
+ // returns false if only one is null or false
+Objects.equals(a,b)
+```
+
+##### Equality Testing and Inheritance
+
+The recommendations for equality check are the following:
+
+1. equality is reflexive. For any non-null reference x, x.equals(x) should return true
+1. equality is symmetric: For any reference x and y, x.equals(y) should return true if and only if y.equals(x) is true
+1. it is transitive: for any reference x, y, and z, if x.equals(y) returns true and y.equals(z) returns true, then x.equals(z) should return true
+1. it is consistent: if the objects to which x and y refer haven't changed, then repeated calls to x.equas(y) return the same value
+1. for any non-null reference x, x.equals(null) should return false
+
+##### Perfect equals method
+
+recipe for perfect equals method:
+
+- Name the explicit parameter otherObject --- layter, you will need to cast it to another variable that you should call other.
+- test whether this happens to be identical to otherObject:
+
+```java
+if (this == otherObject) return true;
+```
+
+- test whether otherObject is null and return false if it is. This test is required.
+
+```java
+if (getClass() != otherObject.getClass()) return false;
+```
+
+If the same semantics holds for all subclasses, you can use an instanceof test:
+
+```java
+if (!(otherObject instanceof ClassName)) return false;
+```
+
+- Cast otherObject to a variable of your class type:
+
+```java
+ClassName other = (ClassName) otherObject
+```
+
+- Now compare the fields, as required by your notion of equality. use == for primitive type fields, Object.equals for object fields. Return true if all fields match, false otherwise
+
+```java
+return field1 == other.field1
+    && Objects.equals(field2, other.field2)
+    && ...;
+```
+
+If you redefine equals in a subclass, include a call to super.equals(other).
+
+##### Tips and Caution
+
+- For array type fields use Array.equals method to check corresponding array elements are equal
+
+```java
+// true if arrays have equal lengths and equal elements in corresponding positions
+// arrrays can have component types Object, int, long, short, char, byte, boolean, float or double
+static boolean equals(type[] a, type[] b)
+```
+
+- Make sure you use @Override declaration to ensure that you are overriding the intended equals method in the parent
+
+```java
+// returns true if a and b are both null, false if exactly one of them is null, and a.equals(b) otherwise
+@Override public boolean equals(Object other)
+```
+
+#### The hashCode Method
+
+Hash code is an integer that is derived from an object.
+
+String classes use the following algorithm to compute the hash code:
+
+```java
+int hash = 0;
+for (int i = 0; i < length(); i++) {
+    hash = 31 * hash + charAt(i);
+}
+
+// string hash codes are derived from contents
+
+// hash code 2556 for both
+String s = "Ok";
+String t = new String("Ok");
+```
+
+The hashCode method is defined in the Object class. Every object has a default hash code derived from memory address.
+
+Every time you redefine the equals method you should redefined the hashCode method. 
+
+Useful functions for redefining the hashCode:
+
+```java
+// returns hash code for this object
+int hashCode()
+
+// retuns hashCode that is combined from hash codes of all supplied objects
+int Objects.hash(Object ... objects)
+
+// retuns 0 if a is null or a.hashCode() otherwise
+static int Objects.hashCode(Object a)
+
+// computes the hash code of the array a, which can have component type Object, int, long, short, char, byte, boolean, float, or double
+static int hashCode(type[] a)
+```
+
+#### The toString Method
+
+toString returns string representation of the object
+
+Most toString methods return the name of the class, followed by the field values enclosed in square brackets:
+
+```java
+public String toString()
+{
+    return getClass().getName()
+        + "[name=" + name
+        + ",salary=" + salary
+        + ",hireDay=" + hireDay
+        + "]";
+}
+
+// calling superclass toString method
+class Manager extends Employee
+    {
+
+        // example: Manager[name=...,salary=...,hireDay=...][bonus=...]
+        public String toString()
+        {
+            return super.toString()
+              + "[bonus=" + bonus
+              + "]";
+        }
+}
+```
+
+When calling System.out.println(x) it automatically calls x.toString() and prints the resulting string.
+
+
+```java
+// TIP: alternative to writing x.toString()
+
+"" + x
+```
+Object class defines to toString method prints the class name and the hashCode of the object. System.out toString method prints something like:
+
+- java.io.PrintStream@2f6684
+
+Arrays toString method is inherited from Object. It uses archaic form for the type
+
+```java
+// prints "[I@1a46e30"
+// prefix denotes array of integers
+int[] luckyNumbers = { 2, 3, 5, 7, 11, 13 };
+String s = "" + luckyNumbers;
+
+// prints "[2, 3, 5, 7, 11, 13]"
+// Arrays.deepToString fro multidimensional arrays
+String s = Arrays.toString(luckyNumbers);
+```
+
+Write toString method for every class that you write to help in debugging.
+
+```java
+// called within a class
+getClass() // returns object that contains information about object
+
+// comparing objects
+x.equals(Object otherObject)
+
+// return string representation of this object
+x.toString()
+
+// return the name of this class
+String getName()
+
+// returns the name of this class
+Class getSuperclass()
+```
+
+### Generic Array List
+
+ArrayList is a generic class with type parameter.
+
+- automatically adjusts capacity as you add and remove elements
+
+```java
+// allocating an array list
+// only has potential for holding 100 elements
+new ArrayList<>(100) // capacity is 100
+
+// not same as allocating a new array
+new Employee[100]
+
+
+// constructs an empty array list of type T
+ArrayList<T>()
+
+// constructs an empty array list with specified capacity
+ArrayList<T>(int initialCapacity)
+
+// add object to existing arrayList
+boolean add(T obj)
+
+// return number of elements currently stored in ArrayList
+int size()
+
+// ensures array list has capacity to store given number of elements
+void ensureCapacity(int capacity)
+
+// reduces storage capacity of array list to current size
+void trimToSize()
+
+```
+
+#### Accessing Array List Elements
+
+Dealing with ArrayList elements is a bit more cumbersome. Can't access elements with []
+
+```java
+// do not call list.set(i, x) until size of array list is larger than i
+staff.set(i, harry)
+
+// retrieving elements from an array list
+Employee e = staff.get(i);
+
+```
+
+raw arrayList is dangerous as its add and set methods accept objects of any type. 
+
+```java
+// compiles without so much as a warning
+// you run into grief only when you retrief object
+staff.set(i, new Date());
+```
+
+Tip for getting benefit of ArrayList with convenient of array:
+
+```java
+ArrayList<X> lsit = new ArrayList<>();
+while (...) 
+{
+    x = ...;
+    list.add(x);
+}
+
+X[] a = new X[list.size()];
+list.toArray(a)
+```
+
+Can add and remove elements to middle of an array:
+
+```java
+int n = staff.size() /2;
+
+// The elements located at n and above are shifted 
+staff.add(n, e);
+
+// elements located above n are copied down and size of array is reduced by one
+staff.remove(n);
+```
+
+You can use "for each loop to traverse the contents of an array:
+
+```java
+for (Employee e: staff)
+{
+    // do something with e
+}
+
+for (int i = 0; i < staff.size(); i++)
+{
+    Employee e = staff.get(i);
+    // do something with e
+}
+```
+
+Summary of ArrayList versus Array:
+
+- don't have to specify array size
+- use add to add as many elements as you like
+- use size() instead of length to count number of elements
+- use a.get(i) instead of a[i] to access element
+
+#### Compatibility between Typed and Raw Array Lists
+
+Always used type parameters for added safety
+
+```java
+public class EmployeeDB 
+{
+    public void update(ArrayList list) { // ... }
+    public ArrayList find(String query) { // ... }
+
+    // pass a typed array list to the update method without casts
+    ArrayList<Employee> staff = ...;
+
+    // The staff object is passed to the update method
+    // not completely safe as update method can add elements to array list that are not of type Employee
+    employeeDB.update(staff);
+}
+```
+
+Assigning a raw ArrayList to a typed one, you get a warining:
+
+```java
+
+// can see warning text if you compile with the option
+//  -Xlint:unchecked
+ArrayList<Employee> result = employeeDB.find(query); // yields warning
+
+// Casting does not make warning go away
+//  limitation of generic types in Java. The compiler translates all typed array lists into raw ArrayList objects after checking taht the type rules are not violated. The casts (ArrayList) and (ArrayList<Employee>) carray out identical runtime checks
+ArrayList<Employee> result = (ArrayList<Employee>) employeeDB.find(query); // yields another warning
+
+// make sure that warning is ok and use following construct to suppress warning
+
+@SuppressWarnings("unchecked") ArrayList<Employee> result = (ArrayList<Employee>) employeeDB.find(query); // yields another warning
 ```
