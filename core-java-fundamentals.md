@@ -59,6 +59,7 @@
     - [Generic Array List](#generic-array-list)
       - [Accessing Array List Elements](#accessing-array-list-elements)
       - [Compatibility between Typed and Raw Array Lists](#compatibility-between-typed-and-raw-array-lists)
+    - [Object Wrappers and Autoboxing](#object-wrappers-and-autoboxing)
 
 # Core Java Fundamentals
 
@@ -1368,4 +1369,96 @@ ArrayList<Employee> result = (ArrayList<Employee>) employeeDB.find(query); // yi
 // make sure that warning is ok and use following construct to suppress warning
 
 @SuppressWarnings("unchecked") ArrayList<Employee> result = (ArrayList<Employee>) employeeDB.find(query); // yields another warning
+```
+
+### Object Wrappers and Autoboxing
+
+All primitive types have a class counterpart. These classes are called wrappers:
+
+- Integer
+- Long
+- Float
+- Double
+- Short
+- Byte 
+- Character
+- Void
+- Boolean
+
+The wrapper classes are immutable and cannot be changed. They are also final and can not be subclassed.
+
+The type parameter inside the angle brackets (generic) cannot be a primitive. Use Object wrapper equivalent for primitives:
+
+```java
+// ArrayList is far less efficient than int[]
+ArrayList<Integer> list = new ArrayList<>();
+```
+
+Autoboxing example:
+
+```java
+list.add(3);
+
+// automatically translated to. Conversion is autoboxing
+list.add(Integer.valueOf(3));
+```
+
+Unboxing happens automatically by compiler:
+
+```java
+int n = list.get(i);
+
+// compiler translates into
+int n = list.get(i).intValue();
+```
+
+The == operator might fail during comparisons for wrapper objects:
+
+```java
+Integer a = 1000;
+Integer b = 1000;
+// may or may not be true
+//  Java implementation "MAY" choose to wrap commonly occurring values into identical objects
+// use equals method to avoid ambiguity
+if (a == b) 
+```
+
+The autoboxing specification requires that boolean, byte, char $\le$ 127, short, and int between -128 and 128 are wrapped into fixed objects.
+
+The compiler and not the virtual machine performs the boxing and unboxing. 
+
+The wrappers are also a convenient palce for certain basic methods:
+
+It is impossible to write a java method that increments an integer parameter because parameters to Java methods are always passed by value.
+
+TIP: can use holder types defined in org.omg.CORBA package IntHolder, BooleanHolder etc to change value passed in:
+
+```java
+public static void triple(IntHolder x)
+{
+    x.value = 3 * x.value;
+}
+
+```
+
+Useful methods for Integer class:
+
+```java
+
+// java.lang.Integer: returns the value of this Integer object as an int
+int intValue
+
+// returns a new String object representing the number i in base 10
+static String toString(int i)
+
+static int parseInt(String s)
+static int parseInt(String s, int radix)
+
+static Integer valueOf(String s)
+static Integer valueOf(String s, int radix)
+
+// java.text.NumberFormat
+// returns the numeric value, assuming the specified String represents a number
+
+Number parse(String s)
 ```
