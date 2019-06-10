@@ -60,6 +60,12 @@
       - [Accessing Array List Elements](#accessing-array-list-elements)
       - [Compatibility between Typed and Raw Array Lists](#compatibility-between-typed-and-raw-array-lists)
     - [Object Wrappers and Autoboxing](#object-wrappers-and-autoboxing)
+    - [Methods with Variable Number of Parameters](#methods-with-variable-number-of-parameters)
+    - [Enumeration Classes](#enumeration-classes)
+    - [Reflection](#reflection)
+      - [The Class Class](#the-class-class)
+      - [Primer on Catching Exceptions](#primer-on-catching-exceptions)
+      - [Using Reflection to Analyze the Capabilities of Classes](#using-reflection-to-analyze-the-capabilities-of-classes)
 
 # Core Java Fundamentals
 
@@ -1462,3 +1468,168 @@ static Integer valueOf(String s, int radix)
 
 Number parse(String s)
 ```
+
+### Methods with Variable Number of Parameters
+
+Methods can have variable number of parameters:
+
+```java
+// ... denotes method can received variable number of parametersj
+public PrintStream printf(String fmt, Object... args) { return format(fmt, args); }
+```
+
+The vararg parameter can be any type
+
+### Enumeration Classes
+
+Example to define an Enum:
+
+```java
+public enum Size 
+{
+    // enum will have only four instances
+    // new objects can not be constructed
+    SMALL("S"), MEDIUM("M"), LARGE("L"), EXTRA_LARGE("XL");
+
+    private String abbreviation;
+
+    private Size(String abbreviation) {this.abbreviation = abbreviation ;}
+    public String getAbbreviations() { return abbreviation; }
+}
+```
+
+Constructer is only invoked when enumerated constants are constructed.
+
+Useful methods:
+
+- Convert an enum to a string:
+
+```java
+Size.SMALL.toString() // "SMALL"
+```
+
+- Convert string to enum
+
+```java
+Size s = Enum.valueOf(Size.class, "SMALL");
+```
+
+- ordinal method yields the position of the enumerated constants
+
+```java
+Size.MEDIUM.ordinal() // returns 1
+```
+
+- compare relative position of the enumerated constants
+
+```java
+Size.MEDIUM.compareTo(Size.SMALL)
+```
+
+### Reflection
+
+#### The Class Class
+
+runtime type identification: is maintained by by Java runtime to keep track of the clas to which an object belongs.
+
+- used by virtual machine to select methods to execute
+
+The getClass method returns instance instance of Class type:
+
+```java
+Employee e;
+Class cl = e.getClass();
+
+System.out.println(e.getClass().getName() + " " + e.getName());
+
+// prints Employee Harry Hacker
+```
+
+The forName returns a class object corresponding to a class name:
+
+```java
+
+// works if forName is name of class or interface
+// otherwise it wil lreturn checked exception
+String className = "java.util.Date";
+Class cl = Class.forName(className);
+```
+
+Can use Java type to return mathching class object
+
+```java
+// Class object describes a type which may or may not be a class
+Class cl1 = Date.class; // if you import java.util.*
+Class cl2 = int.class;
+Class cl3 = Double[].class;
+```
+
+Caution: getName retuns strange names for array types
+
+```java
+Double[].class.getName() // return [Ljava.lang.Double;
+```
+
+The == operator can be used to compare class objects. Only one Class object for each type:
+
+```java
+if (e.getClass() == Employee.class) // ...
+```
+
+Create an instanc of a class dynamically (so long as class requires no options; or the no argument constructor is calledj):
+
+```java
+String s = "java.util.Date";
+Object m = Class.ForName(s).newInstance();
+```
+
+#### Primer on Catching Exceptions
+
+Two types of exceptions:
+
+1. Checked: the compiler will check if a handler exists for the exception
+1. Unchecked: the compiler does not check if a handler is supplied.
+
+handler: can catch exceptions and deal with them 
+
+The Class.forName method is a method that throws a checked exception.
+
+```java
+
+try
+{
+    // statements that might throw exceptionsj
+    String name = ...; // get class name
+    Class cl = Class.forName(name); // is not a class or interface the rest of statements are skipped
+    // do something with cl
+} 
+catch (Exception e)
+{
+    // the method is defined in the Throwable class (parent of Exception)
+    e.printStackTrace();
+}
+```
+
+#### Using Reflection to Analyze the Capabilities of Classes
+
+Three classes in java.lang.reflect package:
+
+1. Field: describe fields
+1. Method: describe methods
+1. Constructor: the constructors of a class
+
+- All classes have a getModifiers method that returns an integer with various bits turned on and off, that describes the midifiers used, such as public and static.
+
+Methods of a class to get access to class items:
+
+- include public fields of superclasses:
+
+1. getFields 
+1. getMethods
+1. getConstructors
+
+- Only includes methods that are declared in the class
+
+1. getDeclaredFields
+1. getDeclaredMethods
+1. getDeclaredConstructors
